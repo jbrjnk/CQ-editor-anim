@@ -9,6 +9,7 @@ Created on Wed May 23 22:02:30 2018
 from functools import reduce
 from operator import add
 from logbook import Logger
+from typing import Callable, List
 
 from PyQt5.QtCore import pyqtSlot, QSettings
 
@@ -82,6 +83,14 @@ class MainMixin(object):
             comp.restoreComponentState(settings)
 
 
+class InjectedFunction:
+    name : str
+    func : Callable
+
+    def __init__(self, name : str, func : Callable) -> None:
+        self.name = name
+        self.func = func
+
 class ComponentMixin(object):
 
 
@@ -89,6 +98,8 @@ class ComponentMixin(object):
     preferences = None
 
     _actions = {}
+
+    _injectedFunctions : List[InjectedFunction] = []
 
 
     def __init__(self):
@@ -109,6 +120,9 @@ class ComponentMixin(object):
             return reduce(add,[a for a in self._actions.values()])
         else:
             return []
+        
+    def injectedFunctions(self):
+        return self._injectedFunctions
 
     @pyqtSlot(object,object)
     def updatePreferences(self,*args):

@@ -13,7 +13,7 @@ from OCP.Geom import Geom_Axis1Placement
 from OCP.gp import gp_Ax3, gp_Dir, gp_Pnt, gp_Ax1
 
 from ..utils import layout, get_save_filename
-from ..mixins import ComponentMixin
+from ..mixins import ComponentMixin, InjectedFunction
 from ..icons import icon
 from ..cq_utils import to_occ_color, make_AIS, DEFAULT_FACE_COLOR
 
@@ -53,10 +53,12 @@ class OCCViewer(QWidget,ComponentMixin):
         super(OCCViewer,self).__init__(parent)
         ComponentMixin.__init__(self)
 
+        self.is_animation_active = False
         self.canvas = OCCTWidget()
         self.canvas.sigObjectSelected.connect(self.handle_selection)
 
         self.create_actions(self)
+        self.create_injected_functions()
 
         self.layout_ = layout(self,
                              [self.canvas,],
@@ -165,8 +167,26 @@ class OCCViewer(QWidget,ComponentMixin):
                                    parent,
                                    triggered=self.save_screenshot)]}
 
-    def toolbarActions(self):
+    def create_injected_functions(self):
+        self._injectedFunctions = [InjectedFunction("view_setAt", self.set_at),
+                                   InjectedFunction("view_setUp", self.set_up),
+                                   InjectedFunction("view_setProj", self.set_proj),
+                                   InjectedFunction("view_setScale", self.set_scale),
+                                   ]
 
+    def set_at(self, x : float, y : float, z : float):
+        self.canvas.setAt(x, y, z)
+
+    def set_up(self, x : float, y : float, z : float):
+        self.canvas.setUp(x, y, z)
+
+    def set_proj(self, x : float, y : float, z : float):
+        self.canvas.setProj(x, y, z)
+
+    def set_scale(self, scale : float):
+        self.canvas.setScale(scale)
+
+    def toolbarActions(self):
         return self._actions['View']
 
 
@@ -230,9 +250,17 @@ class OCCViewer(QWidget,ComponentMixin):
 
         self._get_viewer().Redraw()
 
-    def fit(self):
+    @pyqtSlot()
+    def activate_animation(self):
+        self.is_animation_active = True
 
-        self.canvas.view.FitAll()
+    @pyqtSlot()
+    def deactivate_animation(self):
+        self.is_animation_active = True
+
+    def fit(self):
+        if not self.is_animation_active:
+            self.canvas.view.FitAll()
 
     def iso_view(self):
 
@@ -329,6 +357,9 @@ class OCCViewer(QWidget,ComponentMixin):
                                                   gp_Dir(*direction)))
         ax = AIS_Axis(ax_placement)
         self._display_ais(ax)
+
+    def save_frame(self, targetPath, width, height):
+        self.canvas.save_frame(targetPath, width, height)
 
     def save_screenshot(self):
 

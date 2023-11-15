@@ -222,6 +222,10 @@ class Debugger(QObject,ComponentMixin):
         module.__dict__['log'] = lambda x: info(str(x))
         module.__dict__['cq'] = cq
 
+        for c in self.parent().components.values():
+            for f in c.injectedFunctions():
+                module.__dict__[f.name] = f.func
+
         return cq_objects, set(module.__dict__)-{'cq'}
 
     def _cleanup_locals(self,module,injected_names):
@@ -229,6 +233,7 @@ class Debugger(QObject,ComponentMixin):
         for name in injected_names: module.__dict__.pop(name)
 
     @pyqtSlot(bool)
+    @pyqtSlot()
     def render(self):
 
         if self.preferences['Reload CQ']:

@@ -98,6 +98,19 @@ def get_save_filename(suffix):
     
     return rv
 
+def get_save_dirname(currentDirName = None):
+    QFileDialog.getExistingDirectory
+    dialog = QFileDialog()
+    dialog.setFileMode(QFileDialog.Directory)
+    if currentDirName is not None:
+        dialog.setDirectory(currentDirName)
+
+    if dialog.exec_():
+        fileNames = dialog.selectedFiles()
+        if len(fileNames) == 1:
+            return fileNames[0]
+
+
 def get_open_filename(suffix, curr_dir):
     
     rv,_ = QFileDialog.getOpenFileName(directory=curr_dir, filter='*.{}'.format(suffix))

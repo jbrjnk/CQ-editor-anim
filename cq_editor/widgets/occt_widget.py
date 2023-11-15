@@ -12,6 +12,8 @@ from OCP.V3d import V3d_Viewer
 from OCP.AIS import AIS_InteractiveContext, AIS_DisplayMode
 from OCP.Quantity import Quantity_Color
 
+from OCP.TCollection import TCollection_AsciiString
+from OCP.Image import Image_AlienPixMap, Image_Format
 
 ZOOM_STEP = 0.9
 
@@ -63,7 +65,27 @@ class OCCTWidget(QWidget):
         
         ctx.SetDisplayMode(AIS_DisplayMode.AIS_Shaded, True)
         ctx.DefaultDrawer().SetFaceBoundaryDraw(True)
-        
+
+    def save_frame(self, targetPath, width, height):
+        m = Image_AlienPixMap()
+        m.InitZero(Image_Format.Image_Format_RGB, width, height, 0, 0)  
+        self.view.ToPixMap(m, width, height)
+        if targetPath is not None:
+            fileName = TCollection_AsciiString(targetPath)
+            m.Save(fileName)
+
+    def setAt(self, x : float, y : float, z : float):
+        self.view.SetAt(x, y, z)
+
+    def setProj(self, x : float, y : float, z : float):
+        self.view.SetProj(x, y, z)
+
+    def setUp(self, x : float, y : float, z : float):
+        self.view.SetUp(x, y, z)
+
+    def setScale(self, scale : float):
+        self.view.SetScale(scale)
+
     def wheelEvent(self, event):
         
         delta = event.angleDelta().y()

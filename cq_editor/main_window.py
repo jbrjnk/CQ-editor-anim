@@ -12,6 +12,7 @@ from .widgets.traceback_viewer import TracebackPane
 from .widgets.debugger import Debugger, LocalsView
 from .widgets.cq_object_inspector import CQObjectInspector
 from .widgets.log import LogViewer
+from .widgets.animation_panel import AnimationPanel
 
 from . import __version__
 from .utils import dock, add_actions, open_url, about_dialog, check_gtihub_for_updates, confirm
@@ -128,6 +129,13 @@ class MainWindow(QMainWindow,MainMixin):
                                               self,
                                               defaultArea='bottom'))
 
+        self.registerComponent('animation',
+                               AnimationPanel(self),
+                               lambda c: dock(c,
+                                              "Animation",
+                                              self,
+                                              defaultArea="right"))
+
         for d in self.docks.values():
             d.show()
 
@@ -209,8 +217,12 @@ class MainWindow(QMainWindow,MainMixin):
 
         self.components['debugger'].sigRendered\
             .connect(self.components['object_tree'].addObjects)
+        self.components['debugger'].sigRendered\
+            .connect(self.components['animation'].addObjects)
         self.components['debugger'].sigTraceback\
             .connect(self.components['traceback_viewer'].addTraceback)
+        self.components['debugger'].sigTraceback\
+            .connect(self.components['animation'].addTraceback)
         self.components['debugger'].sigLocals\
             .connect(self.components['variables_viewer'].update_frame)
         self.components['debugger'].sigLocals\
@@ -264,6 +276,15 @@ class MainWindow(QMainWindow,MainMixin):
             .connect(self.components['debugger'].render)
         self.components['editor'].sigFilenameChanged\
             .connect(self.handle_filename_change)
+        
+        self.components['animation'].sigCaptureFrameRequest \
+            .connect(self.components['viewer'].save_frame)
+        self.components['animation'].sigRenderFrameRequest \
+            .connect(self.components['debugger'].render)
+        self.components['animation'].sigActivated \
+            .connect(self.components['viewer'].activate_animation)
+        self.components['animation'].sigDeactivated \
+            .connect(self.components['viewer'].deactivate_animation)
 
     def prepare_console(self):
 
